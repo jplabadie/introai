@@ -140,7 +140,48 @@ class HalmaCore(object):
         if to_pawn is not None:
             print('to space occupied')
             return False
+
+        x_dist = abs(from_node.getCoords()[0] - to_node.getCoords()[0])
+        y_dist = abs(from_node.getCoords()[1] - to_node.getCoords()[1])
+        if(x_dist<2 and y_dist<2):
+            return True
+        elif(x_dist<3 and y_dist<3):
+            if self.existsPawnBetween(from_node,to_node):
+                return True
+            else:
+                print('no adjoining piece to jump')
+                return False
+        else: return self.checkMoveValidRecursive(from_node,to_node)
+
+    def existsPawnBetween(self,from_node,to_node):
+        from_x = from_node.getCoords()[0]
+        from_y = from_node.getCoords()[1]
+        to_x = to_node.getCoords()[0]
+        to_y = to_node.getCoords()[1]
+        internode = None
+        if to_x > from_x and to_y > from_y:
+            internode = self.board[from_y+1][from_x+1]
+        elif to_x > from_x and to_y == from_y:
+            internode = self.board[from_y][from_x+1]
+        elif to_x > from_x and to_y < from_y:
+            internode = self.board[from_y-1][from_x+1]
+        elif to_x == from_x and to_y < from_y:
+            internode = self.board[from_y-1][from_x]
+        elif to_x < from_x and to_y < from_y:
+            internode = self.board[from_y-1][from_x-1]
+        elif to_x < from_x and to_y == from_y:
+            internode = self.board[from_y][from_x-1]
+        elif to_x < from_x and to_y > from_y:
+            internode = self.board[from_y+1][from_x-1]
+        elif to_x == from_x and to_y > from_y:
+            internode = self.board[from_y+1][from_x]
+        pawn = internode.getPawn()
+        if pawn is None:
+            return False
         return True
+
+    def checkMoveValidRecursive(self,from_node,to_node):
+        return False
 
     def moveXY(self,x_from,y_from,x_to,y_to,player):
         from_node = self.board[y_from][x_from]
@@ -173,7 +214,7 @@ class HalmaCore(object):
 def main():
     board = HalmaCore()
     board.printBoard()
-    board.moveXY(4,0,5,0,1)
+    board.moveXY(3,0,5,0,1)
     board.printBoard()
 
 if __name__ == "__main__":
