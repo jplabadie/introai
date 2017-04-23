@@ -127,8 +127,7 @@ class HalmaCore(object):
             start_row = self.dimensions - longest_pawn_row
             start_col = self.dimensions - col_len
 
-    def move(self,x_from,y_from,x_to,y_to):
-        from_node = self.board[y_from][x_from]
+    def checkMoveValid(self,from_node,to_node,player_requesting):
         pawn = from_node.getPawn()
         if pawn is None:
             print('no pawn to be moved')
@@ -137,15 +136,26 @@ class HalmaCore(object):
         if player != self.turn:
             print('not players turn')
             return False
-
-        to_node = self.board[y_to][x_to]
         to_pawn = to_node.getPawn()
         if to_pawn is not None:
             print('to space occupied')
             return False
+        return True
 
-        to_node.setPawn(pawn)
-        from_node.setPawn(None)
+    def moveXY(self,x_from,y_from,x_to,y_to,player):
+        from_node = self.board[y_from][x_from]
+        to_node = self.board[y_to][x_to]
+        return self.move(from_node, to_node,player)
+
+    def move(self,from_node,to_node,player):
+        if( self.checkMoveValid(from_node,to_node,player) ):
+            pawn = from_node.getPawn()
+            to_node.setPawn(pawn)
+            from_node.setPawn(None)
+            return True
+        else:
+            return False
+
 
     def printBoard(self):
         print()
@@ -163,7 +173,7 @@ class HalmaCore(object):
 def main():
     board = HalmaCore()
     board.printBoard()
-    board.move(4,0,5,0)
+    board.moveXY(4,0,5,0,1)
     board.printBoard()
 
 if __name__ == "__main__":
