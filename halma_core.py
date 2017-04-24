@@ -1,8 +1,31 @@
 #Contains code for the core game model of Halma
 from math import ceil
 from random import randint
+import functools
 
-#object representation of a board piece
+# observer update function
+def event(func):
+    def modified(obj,*arg,**kwargs):
+        func(obj,*arg,**kwargs)
+        obj._Observer__fireCallback(func.__name__,*arg,**kwargs)
+    functools.update_wrapper(modified,func)
+    return modified
+
+class Observer(object):
+    def __init__(self):
+        self.__observers = {}  # Method name -> observers
+
+    def addObserver(self, methodName, observer):
+        s = self.__observers.setdefault(methodName, set())
+        s.add(observer)
+
+    def __fireCallback(self, methodName, *arg, **kw):
+        if methodName in self.__observers:
+            for o in self.__observers[methodName]:
+                o(*arg, **kw)
+
+
+# object representation of a board piece
 class Pawn(object):
     global player,pawn_id,node
     global x,y
@@ -11,6 +34,7 @@ class Pawn(object):
         self.pawn_id = pawn_id
         self.y = y
         self.x = x
+        self.node=node
     def getPlayer(self):
         return self.player
     def setPlayer(self,player):
@@ -30,9 +54,10 @@ class Pawn(object):
         return (self.x,self.y)
 
 #object representation of board tiles
-class Node(object):
+class Node(Observer):
     global x_coord, y_coord, up_node, right_node, down_node, left_node, pawn
-    def __init__(self,x_coord,y_coord,up_node=None,right_node=None,down_node=None,left_node=None,pawn=None):
+    def __init__(self, x_coord, y_coord, up_node=None, right_node=None, down_node=None, left_node=None, pawn=None):
+        super().__init__()
         self.x_coord = x_coord
         self.y_coord = y_coord
         self.up_node = up_node
@@ -65,18 +90,25 @@ class Node(object):
     def getDownNode(self):
         return self.down_node
 
+    @event
     def setPawn(self,pawn):
+        if pawn is not None:
+            pawn.setCoords(self.x_coord,self.y_coord)
+            pawn.setNode(self)
         self.pawn = pawn
     def getPawn(self):
         return self.pawn
 
 class HalmaCore(object):
+    global gui
     global board,turn,turn_count
     global dimensions,pieces,players
 
     def __init__(self,xy_dim=16,pieces=19,players=2):
+        self.gui = None
         self.turn_count=0
-        self.turn = randint(0,players)
+        self.turn = randint(0,players-1)
+        print("First move: player ", self.turn)
         self.dimensions = xy_dim
         self.pieces = pieces
         self.players = players
@@ -85,6 +117,7 @@ class HalmaCore(object):
         for y in range(0,xy_dim):
             for x in range(0,xy_dim):
                 tile = Node(x,y)
+                tile.addObserver( "setPawn",self.pawnMovedEvent )
                 self.board[y][x]=tile
         #iterate through all tiles and link to neighbors
         for y in range(0,xy_dim):
@@ -127,12 +160,28 @@ class HalmaCore(object):
             start_row = self.dimensions - longest_pawn_row
             start_col = self.dimensions - col_len
 
-    def checkMoveValid(self,from_node,to_node,player_requesting):
+    def setGui(self,ui):
+        self.gui = ui
+
+    def pawnMovedEvent(self,pawn):
+        if self.gui is not None:
+            self.gui.pawnMovedEvent()
+
+    def checkLocationXY(self,x_pos,y_pos):
+        node = self.board[y_pos][x_pos]
+        pawn = node.getPawn()
+        if pawn is None:
+            return None
+        else:
+            return (pawn.getPawnId(),pawn.getPlayer())
+
+    def checkMoveValid(self,from_node,to_node):
         pawn = from_node.getPawn()
         if pawn is None:
             print('no pawn to be moved')
             return False
         player = pawn.getPlayer()
+        print('player',player)
         if player != self.turn:
             print('not players turn')
             return False
@@ -183,20 +232,31 @@ class HalmaCore(object):
     def checkMoveValidRecursive(self,from_node,to_node):
         return False
 
-    def moveXY(self,x_from,y_from,x_to,y_to,player):
+    def moveXY(self,x_from,y_from,x_to,y_to):
         from_node = self.board[y_from][x_from]
         to_node = self.board[y_to][x_to]
-        return self.move(from_node, to_node,player)
+        return self.move(from_node, to_node)
 
-    def move(self,from_node,to_node,player):
-        if( self.checkMoveValid(from_node,to_node,player) ):
+    def move(self,from_node,to_node):
+        if( self.checkMoveValid(from_node,to_node) ):
             pawn = from_node.getPawn()
             to_node.setPawn(pawn)
             from_node.setPawn(None)
+            self.updateTurn()
             return True
         else:
             return False
 
+    def getTurn(self):
+        return self.turn
+    def getTurnCount(self):
+        return self.turn_count
+
+    def updateTurn(self):
+        self.turn = self.turn +1
+        if self.turn >= self.players:
+            self.turn = 0
+        self.turn_count = self.turn_count +1
 
     def printBoard(self):
         print()
