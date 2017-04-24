@@ -5,6 +5,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QGridLayout
+from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QStatusBar
 from PyQt5.QtWidgets import QTextEdit
@@ -48,6 +49,8 @@ class HalmaGui(QWidget):
 
     @pyqtSlot(bool)
     def pawnClicked(self):
+        if self.finished:
+            return
         button = self.sender()
         x_pos = button.xpos
         y_pos = button.ypos
@@ -70,6 +73,7 @@ class HalmaGui(QWidget):
         super().__init__()
         global move_queue, halma, app, grid
 
+        self.finished = False
         self.grid = QGridLayout()
         self.move_queue = [None]
         self.tiles = [[0 for x in range(halma.dimensions)] for y in range(halma.dimensions)]
@@ -103,12 +107,14 @@ class HalmaGui(QWidget):
             if color_toggle:
                 color_toggle = False
             else: color_toggle = True
-
         self.grid.setSpacing(1)
         self.setLayout(self.grid)
         self.setGeometry(100, 100, 10, 10)
         self.setWindowTitle("Halma")
 
+    def winStatusEvent(self):
+        mw.statusChangedEvent()
+        self.finished = True
 
     def pawnMovedEvent(self):
         for y in range(0, halma.dimensions):

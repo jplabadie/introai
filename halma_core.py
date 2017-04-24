@@ -236,13 +236,13 @@ class HalmaCore(Observer):
             start_row = self.dimensions - longest_pawn_row
             start_col = self.dimensions - col_len
 
-        paths = self.findAllMoves(0, moves_as_coords=True)
-        for item in paths:
-            for si in item:
-                try:
-                    print(si)
-                except Exception:
-                    pass
+        # paths = self.findAllMoves(0, moves_as_coords=True)
+        # for item in paths:
+        #     for si in item:
+        #         try:
+        #             print(si)
+        #         except Exception:
+        #             pass
     @event
     def setStatusMessage(self,string):
         self.status_message = string
@@ -309,12 +309,12 @@ class HalmaCore(Observer):
     def checkWinState(self, board, check_player=None):
         start_row = 0
         start_col = 0
-        longest_pawn_row = ceil(pieces * 0.25)
+        longest_pawn_row = ceil(self.pieces * 0.25)
         col_len = longest_pawn_row
         player0_win = True
         player1_win = True
 
-        for player in range(0,self.players):
+        for player in range(self.players,-1,-1):
             for row in range(start_row, start_row + longest_pawn_row):
                 for col in range(start_col, start_col + col_len):
                     node = board[row][col]
@@ -322,10 +322,8 @@ class HalmaCore(Observer):
                     if pawn is None or pawn.getPlayer() != player:
                         if player == 0:
                             player0_win = False
-                            break
                         else:
                             player1_win = False
-                            break
                 if row > start_row and player == 1:
                     col_len = col_len - 1
                 elif (row >= start_row) and (row < self.dimensions - 2) and (player == 0):
@@ -418,6 +416,11 @@ class HalmaCore(Observer):
             to_node.setPawn(pawn)
             from_node.setPawn(None)
             self.updateTurn()
+            victor =self.checkWinState(self.board)
+            self.setStatusMessage("Move completed. Now player "+ str(self.turn)+ "'s turn.")
+            if( victor != -1):
+                self.setStatusMessage("Player "+ str(victor)+ " wins!")
+                self.gui.winStatusEvent()
             return True
         else:
             return False
@@ -448,10 +451,10 @@ class HalmaCore(Observer):
 
 def main():
     board = HalmaCore()
-    board.printBoard()
-    board.moveXY(3,0,5,0,1)
-    board.printBoard()
-    print(board.findAllMoves(0,moves_as_coords=True))
+    #board.printBoard()
+    #board.moveXY(3,0,5,0,1)
+    #board.printBoard()
+    #print(board.findAllMoves(0,moves_as_coords=True))
 
 if __name__ == "__main__":
     main()
