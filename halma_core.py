@@ -66,9 +66,17 @@ class Node(Observer):
         self.left_node = left_node
         self.pawn = pawn
         self.neighbors = []
+        self.orthogonal = []
+        self.diagonal = []
 
+    def getName(self):
+        return str('('+self.x_coord +','+self.y_coord+')')
     def getNeighbors(self):
         return self.neighbors
+    def getOrthogonal(self):
+        return self.orthogonal
+    def getDiagonal(self):
+        return self.diagonal
 
     def getCoords(self):
         return (self.x_coord,self.y_coord)
@@ -78,26 +86,35 @@ class Node(Observer):
 
     def setUpNode(self,node):
         self.neighbors.append(node)
+        self.orthogonal.append(node)
         self.up_node = node
     def setRightNode(self,node):
         self.neighbors.append(node)
+        self.orthogonal.append(node)
         self.right_node = node
     def setLeftNode(self,node):
         self.neighbors.append(node)
         self.left_node = node
+        self.orthogonal.append(node)
     def setDownNode(self,node):
         self.neighbors.append(node)
         self.down_node = node
+        self.orthogonal.append(node)
+
     def setUpLeft(self,node):
+        self.diagonal.append(node)
         self.neighbors.append(node)
         self.up_left_node = node
     def setUpRight(self,node):
+        self.diagonal.append(node)
         self.neighbors.append(node)
         self.up_right_node = node
     def setDownLeftNode(self,node):
+        self.diagonal.append(node)
         self.neighbors.append(node)
         self.down_left_node = node
     def setDownRightNode(self,node):
+        self.diagonal.append(node)
         self.neighbors.append(node)
         self.down_right_node = node
 
@@ -214,7 +231,14 @@ class HalmaCore(object):
             col_len = 2
             start_row = self.dimensions - longest_pawn_row
             start_col = self.dimensions - col_len
-        print(self.findAllMoves(0, moves_as_coords=True))
+
+        paths = self.findAllMoves(0, moves_as_coords=True)
+        for item in paths:
+            for si in item:
+                try:
+                    print(si)
+                except Exception:
+                    pass
 
     def setGui(self,ui):
         self.gui = ui
@@ -231,12 +255,16 @@ class HalmaCore(object):
         else:
             return (pawn.getPawnId(),pawn.getPlayer())
 
-    def checkMoveValid(self,from_node,to_node,req_player_on_turn=True):
+    def checkMoveValid(self,from_node,to_node,owner=None,req_player_on_turn=True):
         pawn = from_node.getPawn()
         if pawn is None:
             print('no pawn to be moved')
             return False
         player = pawn.getPlayer()
+        if owner is not None:
+            if player is not owner:
+                print('pawn not owned by the player')
+                return False
         print('player',player)
         if req_player_on_turn:
             if player != self.turn:
@@ -257,7 +285,7 @@ class HalmaCore(object):
             else:
                 print('no adjoining piece to jump')
                 return False
-        else: return self.checkMoveValidRecursive(from_node,to_node)
+        else: return False
 
     def checkWinState(self, board, check_player=None):
         start_row = 0
@@ -303,50 +331,62 @@ class HalmaCore(object):
 
     def findAllMoves(self, player, moves_as_coords=False):
         moves = []
-        print(self.pawns)
         for pawn in self.pawns[player]:
             cur_node = pawn.getNode()
+            path = []
             for neighbor in cur_node.getNeighbors():
-                if(self.checkMoveValid(cur_node, neighbor,req_player_on_turn=False)):
+                # if we can move directly to a neighbor node, we can't recurse further
+                if (self.checkMoveValid(cur_node, neighbor, player, req_player_on_turn=False)):
+                    # we haven't recursed, so consider these moves valid (you can move, not jump and move)
                     if moves_as_coords:
                         x1 = cur_node.x_coord
                         y1 = cur_node.y_coord
                         x2 = neighbor.x_coord
                         y2 = neighbor.y_coord
-                        moves.append([(x1,y1),(x2,y2)])
+                        path.append([(x1, y1), (x2, y2)])
                     else:
-                        moves.append(cur_node,neighbor)
+                        path.append((cur_node, neighbor))
+            moves.append( path )
+
+        moves.append( self.findPathsRecursive(cur_node, player, path=[],moves_as_coords=True))
         return moves
 
-    def existsPawnBetween(self,from_node,to_node):
-        from_x = from_node.getCoords()[0]
-        from_y = from_node.getCoords()[1]
-        to_x = to_node.getCoords()[0]
-        to_y = to_node.getCoords()[1]
-        internode = None
-        if to_x > from_x and to_y > from_y:
-            internode = self.board[from_y+1][from_x+1]
-        elif to_x > from_x and to_y == from_y:
-            internode = self.board[from_y][from_x+1]
-        elif to_x > from_x and to_y < from_y:
-            internode = self.board[from_y-1][from_x+1]
-        elif to_x == from_x and to_y < from_y:
-            internode = self.board[from_y-1][from_x]
-        elif to_x < from_x and to_y < from_y:
-            internode = self.board[from_y-1][from_x-1]
-        elif to_x < from_x and to_y == from_y:
-            internode = self.board[from_y][from_x-1]
-        elif to_x < from_x and to_y > from_y:
-            internode = self.board[from_y+1][from_x-1]
-        elif to_x == from_x and to_y > from_y:
-            internode = self.board[from_y+1][from_x]
-        pawn = internode.getPawn()
-        if pawn is None:
-            return False
-        return True
+    def findPathsRecursive(self,cur_node, player, path=[],visited=[],moves_as_coords=False):
+        for neighbor in cur_node.getNeighbors():
+            for next in neighbor.getNeighbors():
+                if (self.checkMoveValid(cur_node, next, player,req_player_on_turn=False)):
+                    visited.append(neighbor);
+                    if moves_as_coords:
+                        x1 = cur_node.x_coord
+                        y1 = cur_node.y_coord
+                        x2 = next.x_coord
+                        y2 = next.y_coord
+                        path.append([(x1, y1), (x2, y2)])
+                    else:
+                        path.append((cur_node, neighbor))
+                    return path
+                elif next not in visited:
+                    visited.append(next)
+                    self.findPathsRecursive(next,player, path,visited,moves_as_coords)
+        return path
 
-    def checkMoveValidRecursive(self,from_node,to_node):
-        return False
+    # Check if a pawn exists between our two nodes to allow a jump
+    def existsPawnBetween(self,from_node,to_node):
+        internode = None
+
+        for node in from_node.getOrthogonal():
+            for next in node.getOrthogonal():
+                if next == to_node: internode = node
+
+        if internode is None:
+            for node in from_node.getDiagonal():
+                for next in node.getDiagonal():
+                    if next == to_node: internode = node
+
+        if internode is not None:
+            if internode.getPawn() is not None:
+                return True
+        else: return False
 
     def moveXY(self,x_from,y_from,x_to,y_to):
         from_node = self.board[y_from][x_from]
@@ -369,10 +409,10 @@ class HalmaCore(object):
         return self.turn_count
 
     def updateTurn(self):
-        self.turn = self.turn +1
+        self.turn += 1
         if self.turn >= self.players:
             self.turn = 0
-        self.turn_count = self.turn_count +1
+        self.turn_count += 1
 
     def printBoard(self):
         print()
