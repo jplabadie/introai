@@ -31,9 +31,14 @@ class MainWindow(QMainWindow):
         game_menu.addAction("add")
         #game_menu.triggered[QAction].connect( self.gameMenuTrigger )
 
+        self.setStyleSheet("background-color: white")
         self.statusBar = QStatusBar()
         self.setWindowTitle("Halma")
         self.setStatusBar(self.statusBar)
+        self.statusChangedEvent()
+
+    def statusChangedEvent(self):
+        self.statusBar.showMessage(halma.getStatusMessage())
 
     def setCenterWidget(self, widget):
         self.setCentralWidget(widget)
@@ -58,6 +63,9 @@ class HalmaGui(QWidget):
             self.move_queue = [None]
             halma.moveXY(from_x,from_y,to_x,to_y)
 
+    def statusChangedEvent(self):
+        mw.statusChangedEvent()
+
     def __init__(self):
         super().__init__()
         global move_queue, halma, app, grid
@@ -66,6 +74,7 @@ class HalmaGui(QWidget):
         self.move_queue = [None]
         self.tiles = [[0 for x in range(halma.dimensions)] for y in range(halma.dimensions)]
 
+        color_toggle = False
         for y in range(0, halma.dimensions):
             for x in range(0, halma.dimensions):
                 button = HalmaTile()
@@ -82,15 +91,24 @@ class HalmaGui(QWidget):
                         icon = QIcon('purple.png')
                 else:
                     icon = QIcon()
-                button.setStyleSheet("background-color:#ddccd1; border-size:2px; border-style: groove ")
+                if color_toggle:
+                    button.setStyleSheet("background-color: white; border: 1px grey white; border-style: ridge ")
+                    color_toggle = False
+                else:
+                    button.setStyleSheet("background-color: #ededed; border:1px grey white; border-style: ridge ")
+                    color_toggle = True
                 button.setIcon(icon)
                 self.tiles[y][x] = button
                 self.grid.addWidget(button, y+1, x+1)
+            if color_toggle:
+                color_toggle = False
+            else: color_toggle = True
 
         self.grid.setSpacing(1)
         self.setLayout(self.grid)
         self.setGeometry(100, 100, 10, 10)
         self.setWindowTitle("Halma")
+
 
     def pawnMovedEvent(self):
         for y in range(0, halma.dimensions):
@@ -111,6 +129,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     halma = HalmaCore()
     gui = HalmaGui()
+
     halma.setGui(gui)
     mw = MainWindow()
     mw.setCenterWidget(gui)

@@ -144,22 +144,26 @@ class Node(Observer):
     def getPawn(self):
         return self.pawn
 
-class HalmaCore(object):
+class HalmaCore(Observer):
     global gui
     global board,turn,turn_count
     global dimensions,pieces,players
     global pawns
 
-    def __init__(self,xy_dim=16,pieces=19,players=2):
+    def __init__(self, xy_dim=16, pieces=19, players=2):
+        super().__init__()
+        self.status_message = ""
         self.gui = None
         self.turn_count=0
         self.turn = randint(0,players-1)
         print("First move: player ", self.turn)
+        self.setStatusMessage("Player "+str(self.turn) +" gets the first move.")
         self.dimensions = xy_dim
         self.pieces = pieces
         self.players = players
         self.board = [[0] * self.dimensions for i in range(self.dimensions)]
         self.pawns = [[] * self.pieces for i in range(self.players)]
+        self.addObserver("setStatusMessage", self.statusChangedEvent)
         #create all board tiles as Nodes and place in 2D list
         for y in range(0,xy_dim):
             for x in range(0,xy_dim):
@@ -239,9 +243,19 @@ class HalmaCore(object):
                     print(si)
                 except Exception:
                     pass
+    @event
+    def setStatusMessage(self,string):
+        self.status_message = string
+
+    def getStatusMessage(self):
+        return self.status_message
 
     def setGui(self,ui):
         self.gui = ui
+
+    def statusChangedEvent(self,status):
+        if self.gui is not None:
+            self.gui.statusChangedEvent()
 
     def pawnMovedEvent(self,pawn):
         if self.gui is not None:
@@ -259,20 +273,24 @@ class HalmaCore(object):
         pawn = from_node.getPawn()
         if pawn is None:
             print('no pawn to be moved')
+            self.setStatusMessage('Current Player:' + str(self.turn)+' Status: move fail - no pawn in location')
             return False
         player = pawn.getPlayer()
         if owner is not None:
             if player is not owner:
                 print('pawn not owned by the player')
+                self.setStatusMessage('Current Player:' + str(self.turn) + ' Status: move fail - pawn not owned by current')
                 return False
         print('player',player)
         if req_player_on_turn:
             if player != self.turn:
                 print('not players turn')
+                self.setStatusMessage('Current Player:' + str(self.turn) + ' Status: move fail - wait your turn')
                 return False
         to_pawn = to_node.getPawn()
         if to_pawn is not None:
             print('to space occupied')
+            self.setStatusMessage('Current Player:' + str(self.turn) + ' Status: move fail - target location occupied')
             return False
 
         x_dist = abs(from_node.getCoords()[0] - to_node.getCoords()[0])
@@ -283,6 +301,7 @@ class HalmaCore(object):
             if self.existsPawnBetween(from_node,to_node):
                 return True
             else:
+                self.setStatusMessage('Current Player:' + str(self.turn) + ' Status: move fail - no adjoining piece for jump')
                 print('no adjoining piece to jump')
                 return False
         else: return False
@@ -348,7 +367,7 @@ class HalmaCore(object):
                         path.append((cur_node, neighbor))
             moves.append( path )
 
-        moves.append( self.findPathsRecursive(cur_node, player, path=[],moves_as_coords=True))
+        moves.append( self.findPathsRecursive(cur_node, player, path=[]))
         return moves
 
     def findPathsRecursive(self,cur_node, player, path=[],visited=[],moves_as_coords=False):
