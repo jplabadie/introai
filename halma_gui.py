@@ -3,7 +3,11 @@ import sys
 from PyQt5.QtCore import QSize, pyqtSlot
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QGridLayout
+from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QStatusBar
+from PyQt5.QtWidgets import QTextEdit
 
 from final.introai.halma_core import HalmaCore
 
@@ -17,6 +21,22 @@ class HalmaTile(QPushButton):
         xpos = x
         ypos =y
 
+class MainWindow(QMainWindow):
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
+
+        bar = self.menuBar()
+        game_menu = bar.addMenu("Game")
+        game_menu.addAction("save")
+        game_menu.addAction("add")
+        #game_menu.triggered[QAction].connect( self.gameMenuTrigger )
+
+        self.statusBar = QStatusBar()
+        self.setWindowTitle("Halma")
+        self.setStatusBar(self.statusBar)
+
+    def setCenterWidget(self, widget):
+        self.setCentralWidget(widget)
 
 class HalmaGui(QWidget):
     global move_queue, halma, app, tiles
@@ -62,12 +82,12 @@ class HalmaGui(QWidget):
                         icon = QIcon('purple.png')
                 else:
                     icon = QIcon()
-                button.setStyleSheet("background-color: white; border-style: insert ")
+                button.setStyleSheet("background-color:#ddccd1; border-size:2px; border-style: groove ")
                 button.setIcon(icon)
                 self.tiles[y][x] = button
                 self.grid.addWidget(button, y+1, x+1)
 
-        self.grid.setSpacing(0)
+        self.grid.setSpacing(1)
         self.setLayout(self.grid)
         self.setGeometry(100, 100, 10, 10)
         self.setWindowTitle("Halma")
@@ -92,5 +112,8 @@ if __name__ == '__main__':
     halma = HalmaCore()
     gui = HalmaGui()
     halma.setGui(gui)
-    gui.show()
+    mw = MainWindow()
+    mw.setCenterWidget(gui)
+    mw.show()
+    #gui.show()
     sys.exit(app.exec_())

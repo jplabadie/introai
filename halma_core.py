@@ -5,8 +5,8 @@ import functools
 
 # observer update function
 def event(func):
-    def modified(obj,*arg,**kwargs):
-        func(obj,*arg,**kwargs)
+    def modified(obj, *arg, **kwargs):
+        func(obj, *arg, **kwargs)
         obj._Observer__fireCallback(func.__name__,*arg,**kwargs)
     functools.update_wrapper(modified,func)
     return modified
@@ -55,7 +55,7 @@ class Pawn(object):
 
 #object representation of board tiles
 class Node(Observer):
-    global x_coord, y_coord, up_node, right_node, down_node, left_node, pawn
+
     def __init__(self, x_coord, y_coord, up_node=None, right_node=None, down_node=None, left_node=None, pawn=None):
         super().__init__()
         self.x_coord = x_coord
@@ -65,6 +65,10 @@ class Node(Observer):
         self.down_node = down_node
         self.left_node = left_node
         self.pawn = pawn
+        self.neighbors = []
+
+    def getNeighbors(self):
+        return self.neighbors
 
     def getCoords(self):
         return (self.x_coord,self.y_coord)
@@ -73,13 +77,29 @@ class Node(Observer):
         self.y_coord = y
 
     def setUpNode(self,node):
+        self.neighbors.append(node)
         self.up_node = node
     def setRightNode(self,node):
+        self.neighbors.append(node)
         self.right_node = node
     def setLeftNode(self,node):
+        self.neighbors.append(node)
         self.left_node = node
     def setDownNode(self,node):
+        self.neighbors.append(node)
         self.down_node = node
+    def setUpLeft(self,node):
+        self.neighbors.append(node)
+        self.up_left_node = node
+    def setUpRight(self,node):
+        self.neighbors.append(node)
+        self.up_right_node = node
+    def setDownLeftNode(self,node):
+        self.neighbors.append(node)
+        self.down_left_node = node
+    def setDownRightNode(self,node):
+        self.neighbors.append(node)
+        self.down_right_node = node
 
     def getUpNode(self):
         return self.up_node
@@ -89,6 +109,14 @@ class Node(Observer):
         return self.left_node
     def getDownNode(self):
         return self.down_node
+    def getUpRightNode(self):
+        return self.up_right_node
+    def getUpLeftNode(self):
+        return self.up_left_node
+    def getDownLeftNode(self):
+        return self.down_left_node
+    def getDownRightNode(self):
+        return self.down_right_node
 
     @event
     def setPawn(self,pawn):
@@ -103,6 +131,7 @@ class HalmaCore(object):
     global gui
     global board,turn,turn_count
     global dimensions,pieces,players
+    global pawns
 
     def __init__(self,xy_dim=16,pieces=19,players=2):
         self.gui = None
@@ -113,6 +142,7 @@ class HalmaCore(object):
         self.pieces = pieces
         self.players = players
         self.board = [[0] * self.dimensions for i in range(self.dimensions)]
+        self.pawns = [[] * self.pieces for i in range(self.players)]
         #create all board tiles as Nodes and place in 2D list
         for y in range(0,xy_dim):
             for x in range(0,xy_dim):
@@ -128,6 +158,18 @@ class HalmaCore(object):
                     tile_right = self.board[y][x+1]
                     tile_right.setLeftNode(tile)
                     tile.setRightNode(tile_right)
+                    try:
+                        tile_down_right = self.board[y+1][x+1]
+                        tile_down_right.setUpLeftNode(tile)
+                        tile.setDownRight(tile_down_right)
+                    except Exception:
+                        pass
+                    try:
+                        tile_down_left = self.board[y+1][x-1]
+                        tile_down_left.setUpRightNode(tile)
+                        tile.setDownLeft(tile_down_left)
+                    except Exception:
+                        pass
                 except Exception:
                     pass # out of bounds should just not execute
                 #set up-down node links
@@ -135,6 +177,18 @@ class HalmaCore(object):
                     tile_up = self.board[y-1][x]
                     tile_up.setDownNode(tile)
                     tile.setUpNode(tile_up)
+                    try:
+                        tile_up_right = self.board[y-1][x+1]
+                        tile_up_right.setDownLeftNode(tile)
+                        tile.setUpRight(tile_up_right)
+                    except Exception:
+                        pass
+                    try:
+                        tile_up_left = self.board[y-1][x-1]
+                        tile_up_left.setDownRightNode(tile)
+                        tile.setUpLeft(tile_up_left)
+                    except Exception:
+                        pass
                 except Exception:
                     pass # out of bounds should just not execute
 
@@ -149,6 +203,7 @@ class HalmaCore(object):
                 for col in range(start_col,start_col+col_len):
                     node = self.board[row][col]
                     pawn = Pawn(player,pawn_id,node,row,col)
+                    self.pawns[player].append( pawn )
                     node.setPawn(pawn)
                     pawn_id = pawn_id+1
                 if row > start_row and player == 0:
@@ -159,6 +214,7 @@ class HalmaCore(object):
             col_len = 2
             start_row = self.dimensions - longest_pawn_row
             start_col = self.dimensions - col_len
+        print(self.findAllMoves(0, moves_as_coords=True))
 
     def setGui(self,ui):
         self.gui = ui
@@ -175,16 +231,17 @@ class HalmaCore(object):
         else:
             return (pawn.getPawnId(),pawn.getPlayer())
 
-    def checkMoveValid(self,from_node,to_node):
+    def checkMoveValid(self,from_node,to_node,req_player_on_turn=True):
         pawn = from_node.getPawn()
         if pawn is None:
             print('no pawn to be moved')
             return False
         player = pawn.getPlayer()
         print('player',player)
-        if player != self.turn:
-            print('not players turn')
-            return False
+        if req_player_on_turn:
+            if player != self.turn:
+                print('not players turn')
+                return False
         to_pawn = to_node.getPawn()
         if to_pawn is not None:
             print('to space occupied')
@@ -201,6 +258,65 @@ class HalmaCore(object):
                 print('no adjoining piece to jump')
                 return False
         else: return self.checkMoveValidRecursive(from_node,to_node)
+
+    def checkWinState(self, board, check_player=None):
+        start_row = 0
+        start_col = 0
+        longest_pawn_row = ceil(pieces * 0.25)
+        col_len = longest_pawn_row
+        player0_win = True
+        player1_win = True
+
+        for player in range(0,self.players):
+            for row in range(start_row, start_row + longest_pawn_row):
+                for col in range(start_col, start_col + col_len):
+                    node = board[row][col]
+                    pawn = node.getPawn()
+                    if pawn is None or pawn.getPlayer() != player:
+                        if player == 0:
+                            player0_win = False
+                            break
+                        else:
+                            player1_win = False
+                            break
+                if row > start_row and player == 1:
+                    col_len = col_len - 1
+                elif (row >= start_row) and (row < self.dimensions - 2) and (player == 0):
+                    col_len = col_len + 1
+                    start_col = self.dimensions - col_len
+            col_len = 2
+            start_row = self.dimensions - longest_pawn_row
+            start_col = self.dimensions - col_len
+
+        if check_player is None:
+            if player0_win and player1_win:
+                return "tie"
+            elif player0_win:
+                return 0
+            elif player1_win:
+                return 1
+            else: return -1
+        else:
+            if check_player == 0:
+                return player0_win
+            return player1_win
+
+    def findAllMoves(self, player, moves_as_coords=False):
+        moves = []
+        print(self.pawns)
+        for pawn in self.pawns[player]:
+            cur_node = pawn.getNode()
+            for neighbor in cur_node.getNeighbors():
+                if(self.checkMoveValid(cur_node, neighbor,req_player_on_turn=False)):
+                    if moves_as_coords:
+                        x1 = cur_node.x_coord
+                        y1 = cur_node.y_coord
+                        x2 = neighbor.x_coord
+                        y2 = neighbor.y_coord
+                        moves.append([(x1,y1),(x2,y2)])
+                    else:
+                        moves.append(cur_node,neighbor)
+        return moves
 
     def existsPawnBetween(self,from_node,to_node):
         from_x = from_node.getCoords()[0]
@@ -276,6 +392,7 @@ def main():
     board.printBoard()
     board.moveXY(3,0,5,0,1)
     board.printBoard()
+    print(board.findAllMoves(0,moves_as_coords=True))
 
 if __name__ == "__main__":
     main()
