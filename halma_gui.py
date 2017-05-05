@@ -51,24 +51,33 @@ class HalmaGui(QWidget):
         if self.finished:
             return
         button = self.sender()
-        b1_style = QVBoxLayout("background-color: white; border: 1px grey white; border-style: ridge ")
-        button.setStyleSheet("background-color: green")
         x_pos = button.xpos
         y_pos = button.ypos
 
         if self.move_queue[0] is None:
+            if x_pos % 2 != 0:
+                button.setStyleSheet("background-color: #aaeded; border: 1px grey white; border-style: ridge")
+            else:
+                button.setStyleSheet("background-color: #aaeded; border: 1px grey white; border-style: ridge")
             self.move_queue[0] = button
         else:
             last_button = self.move_queue[0]
-            b2_style = QVBoxLayout("background-color: grey; border: 1px grey white; border-style: ridge ")
             from_x = last_button.xpos
             from_y = last_button.ypos
             to_x = x_pos
             to_y = y_pos
             self.move_queue = [None]
             halma.moveXY(from_x,from_y,to_x,to_y)
-            button.setStyleSheet(b1_style)
-            last_button.setStyleSheet(b2_style)
+            if from_y%2 != 0:
+                if from_x % 2 == 0:
+                    last_button.setStyleSheet("background-color: white; border: 1px grey white; border-style: ridge")
+                else:
+                    last_button.setStyleSheet("background-color: #ededed; border: 1px grey white; border-style: ridge")
+            else:
+                if from_x % 2 == 0:
+                    last_button.setStyleSheet("background-color: #ededed; border: 1px grey white; border-style: ridge")
+                else:
+                    last_button.setStyleSheet("background-color: white; border: 1px grey white; border-style: ridge")
 
     def statusChangedEvent(self):
         mw.statusChangedEvent()
