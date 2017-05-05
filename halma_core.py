@@ -150,7 +150,7 @@ class HalmaCore(Observer):
     global dimensions,pieces,players
     global pawns
 
-    def __init__(self, xy_dim=16, pieces=19, players=2):
+    def __init__(self, xy_dim=8, pieces=10, players=2, start_shape='triangle'):
         super().__init__()
         self.status_message = ""
         self.gui = None
@@ -164,12 +164,14 @@ class HalmaCore(Observer):
         self.board = [[0] * self.dimensions for i in range(self.dimensions)]
         self.pawns = [[] * self.pieces for i in range(self.players)]
         self.addObserver("setStatusMessage", self.statusChangedEvent)
+
         #create all board tiles as Nodes and place in 2D list
         for y in range(0,xy_dim):
             for x in range(0,xy_dim):
                 tile = Node(x,y)
                 tile.addObserver( "setPawn",self.pawnMovedEvent )
                 self.board[y][x]=tile
+
         #iterate through all tiles and link to neighbors
         for y in range(0,xy_dim):
             for x in range(0,xy_dim):
@@ -216,34 +218,50 @@ class HalmaCore(Observer):
         #initialize and place player pawns
         start_row = 0
         start_col = 0
-        longest_pawn_row = ceil( pieces * 0.25 )
-        col_len = longest_pawn_row
-        pawn_id = 0
-        for player in range(0,players):
-            for row in range(start_row,start_row+longest_pawn_row):
-                for col in range(start_col,start_col+col_len):
-                    node = self.board[row][col]
-                    pawn = Pawn(player,pawn_id,node,row,col)
-                    self.pawns[player].append( pawn )
-                    node.setPawn(pawn)
-                    pawn_id = pawn_id+1
-                if row > start_row and player == 0:
-                    col_len = col_len - 1
-                elif (row >= start_row) and (row <self.dimensions-2) and (player ==1):
-                    col_len = col_len + 1
-                    start_col = self.dimensions - col_len
-            col_len = 2
-            start_row = self.dimensions - longest_pawn_row
-            start_col = self.dimensions - col_len
+        if (pieces%2) != 0 and start_shape == 'diamond':
+            print('monkey')
+            longest_pawn_row = ceil( pieces * 0.25 )
+            col_len = longest_pawn_row
+            pawn_id = 0
+            for player in range(0, players):
+                for row in range(start_row, start_row + longest_pawn_row):
+                    for col in range(start_col, start_col + col_len):
+                        node = self.board[row][col]
+                        pawn = Pawn(player, pawn_id, node, row, col)
+                        self.pawns[player].append(pawn)
+                        node.setPawn(pawn)
+                        pawn_id = pawn_id + 1
+                    if row > start_row and player == 0:
+                        col_len = col_len - 1
+                    elif (row >= start_row) and (row < self.dimensions - 2) and (player == 1):
+                        col_len = col_len + 1
+                        start_col = self.dimensions - col_len
+                col_len = 2
+                start_row = self.dimensions - longest_pawn_row
+                start_col = self.dimensions - col_len
 
-        self.findAllMoves(0,moves_as_coords=True)
-        paths = self.findAllMoves(0, moves_as_coords=True)
-        for item in paths:
-            for si in item:
-                try:
-                    print(si)
-                except Exception:
-                    pass
+        elif (pieces%2) == 0 and start_shape == 'triangle':
+            longest_pawn_row = ceil(pieces/3)
+            col_len = longest_pawn_row
+            pawn_id = 0
+            for player in range(0, players):
+                for row in range(start_row, start_row + longest_pawn_row):
+                    for col in range(start_col, start_col + col_len):
+                        node = self.board[row][col]
+                        pawn = Pawn(player, pawn_id, node, row, col)
+                        self.pawns[player].append(pawn)
+                        node.setPawn(pawn)
+                        pawn_id = pawn_id + 1
+                    if player == 0:
+                        col_len = col_len - 1
+                    elif (row >= start_row) and (row < self.dimensions - 1) and (player == 1):
+                        col_len = col_len + 1
+                        start_col = self.dimensions - col_len
+                col_len = 1
+                start_row = self.dimensions - longest_pawn_row
+                start_col = self.dimensions - col_len
+
+
     @event
     def setStatusMessage(self,string):
         self.status_message = string

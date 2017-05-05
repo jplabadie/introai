@@ -5,6 +5,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QGridLayout
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QStatusBar
+from PyQt5.QtWidgets import QVBoxLayout
 
 from final.introai.halma_core import HalmaCore
 
@@ -50,6 +51,8 @@ class HalmaGui(QWidget):
         if self.finished:
             return
         button = self.sender()
+        b1_style = QVBoxLayout("background-color: white; border: 1px grey white; border-style: ridge ")
+        button.setStyleSheet("background-color: green")
         x_pos = button.xpos
         y_pos = button.ypos
 
@@ -57,12 +60,15 @@ class HalmaGui(QWidget):
             self.move_queue[0] = button
         else:
             last_button = self.move_queue[0]
+            b2_style = QVBoxLayout("background-color: grey; border: 1px grey white; border-style: ridge ")
             from_x = last_button.xpos
             from_y = last_button.ypos
             to_x = x_pos
             to_y = y_pos
             self.move_queue = [None]
             halma.moveXY(from_x,from_y,to_x,to_y)
+            button.setStyleSheet(b1_style)
+            last_button.setStyleSheet(b2_style)
 
     def statusChangedEvent(self):
         mw.statusChangedEvent()
@@ -88,9 +94,9 @@ class HalmaGui(QWidget):
                 if(halma.checkLocationXY(x,y) is not None):
                     player = halma.checkLocationXY(x,y)[1]
                     if player == 0:
-                        icon = QIcon('purple.png')
-                    elif player == 1:
                         icon = QIcon('orange.png')
+                    elif player == 1:
+                        icon = QIcon('purple.png')
                 else:
                     icon = QIcon()
                 if color_toggle:
@@ -112,7 +118,7 @@ class HalmaGui(QWidget):
 
     def winStatusEvent(self):
         mw.statusChangedEvent()
-        self.finished = True
+        #self.finished = True
 
     def pawnMovedEvent(self):
         for y in range(0, halma.dimensions):
@@ -121,9 +127,9 @@ class HalmaGui(QWidget):
                 if(halma.checkLocationXY(x,y) is not None):
                     player = halma.checkLocationXY(x,y)[1]
                     if player == 0:
-                        icon = QIcon('purple.png')
-                    elif player == 1:
                         icon = QIcon('orange.png')
+                    elif player == 1:
+                        icon = QIcon('purple.png')
                 else:
                     icon = QIcon()
                 button.setIcon(icon)
