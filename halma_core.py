@@ -236,13 +236,14 @@ class HalmaCore(Observer):
             start_row = self.dimensions - longest_pawn_row
             start_col = self.dimensions - col_len
 
-        # paths = self.findAllMoves(0, moves_as_coords=True)
-        # for item in paths:
-        #     for si in item:
-        #         try:
-        #             print(si)
-        #         except Exception:
-        #             pass
+        self.findAllMoves(0,moves_as_coords=True)
+        paths = self.findAllMoves(0, moves_as_coords=True)
+        for item in paths:
+            for si in item:
+                try:
+                    print(si)
+                except Exception:
+                    pass
     @event
     def setStatusMessage(self,string):
         self.status_message = string
@@ -307,6 +308,7 @@ class HalmaCore(Observer):
         else: return False
 
     def checkWinState(self, board, check_player=None):
+        return 1
         start_row = 0
         start_col = 0
         longest_pawn_row = ceil(self.pieces * 0.25)

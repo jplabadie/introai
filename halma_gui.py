@@ -1,14 +1,10 @@
 import sys
 
 from PyQt5.QtCore import QSize, pyqtSlot
-from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QGridLayout
-from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QStatusBar
-from PyQt5.QtWidgets import QTextEdit
 
 from final.introai.halma_core import HalmaCore
 
@@ -34,6 +30,8 @@ class MainWindow(QMainWindow):
 
         self.setStyleSheet("background-color: white")
         self.statusBar = QStatusBar()
+        turnButton = QPushButton()
+        self.statusBar.addWidget(turnButton)
         self.setWindowTitle("Halma")
         self.setStatusBar(self.statusBar)
         self.statusChangedEvent()
@@ -90,9 +88,9 @@ class HalmaGui(QWidget):
                 if(halma.checkLocationXY(x,y) is not None):
                     player = halma.checkLocationXY(x,y)[1]
                     if player == 0:
-                        icon = QIcon('orange.png')
-                    elif player == 1:
                         icon = QIcon('purple.png')
+                    elif player == 1:
+                        icon = QIcon('orange.png')
                 else:
                     icon = QIcon()
                 if color_toggle:
@@ -123,9 +121,9 @@ class HalmaGui(QWidget):
                 if(halma.checkLocationXY(x,y) is not None):
                     player = halma.checkLocationXY(x,y)[1]
                     if player == 0:
-                        icon = QIcon('orange.png')
-                    elif player == 1:
                         icon = QIcon('purple.png')
+                    elif player == 1:
+                        icon = QIcon('orange.png')
                 else:
                     icon = QIcon()
                 button.setIcon(icon)
