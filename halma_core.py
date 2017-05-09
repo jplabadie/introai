@@ -3,8 +3,6 @@ from math import ceil
 from random import randint
 import functools
 
-
-
 class HalmaCore():
     global gui
     global board,turn,turn_count
@@ -64,6 +62,8 @@ class HalmaCore():
         moves = []
         for i in range(-1, 2):
             for j in range(-1, 2):
+                if( i == 0 and j == 0):
+                    continue
                 posx = pawn[0] + i
                 posy = pawn[1] + j
                 if not ( posx < 0 or posx >= self.xy_dim or posy < 0 or posy >= self.xy_dim ):
@@ -71,21 +71,9 @@ class HalmaCore():
                         if((posx, posy) not in self.green["pawns"]):
                             moves.append((posx,posy))
 
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                posx = pawn[0] + 2*i
-                posy = pawn[1] + 2*j
-                if not ( posx < 0 or posx >= self.xy_dim or posy < 0 or posy >= self.xy_dim ):
-                    if ((posx, posy) not in self.red["pawns"]):
-                        if((posx, posy) not in self.green["pawns"]):
-                            if((i,j) in self.red["pawns"] or (i,j) in self.green["pawns"]):
-                                path = [(pawn[0], pawn[1])]
-                                jumps = self.findJumps((posx, posy), path)
-                                for jump in jumps:
-                                    moves.append(jump)
-                                print()
-                                print(moves)
-                                moves.append((posx,posy))
+        for jump in self.findJumps(pawn, [pawn]):
+            moves.append(jump)
+
 
         return moves
 
@@ -93,34 +81,50 @@ class HalmaCore():
         moves = []
         for i in range(-1, 2):
             for j in range(-1, 2):
+                if( i == 0 and j == 0):
+                    continue
                 posx = pawn[0] + 2*i
                 posy = pawn[1] + 2*j
                 if not ( posx < 0 or posx >= self.xy_dim or posy < 0 or posy >= self.xy_dim ):
                     if ((posx, posy) not in self.red["pawns"]):
                         if((posx, posy) not in self.green["pawns"]):
-                            if((i,j) in self.red["pawns"] or (i,j) in self.green["pawns"]):
-                                if (posx, posy) not in path:
-                                    path.append((pawn[0], pawn[1]))
-                                    jumps = self.findJumps((posx, posy), path)
-                                    for jump in jumps:
-                                        moves.append(jump)
-                                    moves.append((posx,posy))
+                            jumpx = pawn[0] + i
+                            jumpy = pawn[1] + j
+                            if not ( jumpx < 0 or jumpx >= self.xy_dim or jumpy < 0 or jumpy >= self.xy_dim ):
+                                if(self.board[jumpx][jumpy] != -1 and (jumpx,jumpy) != pawn):
+                                    if (posx, posy) not in path:
+                                        path.append((pawn[0], pawn[1]))
+                                        jumps = self.findJumps((posx, posy), path)
+                                        for jump in jumps:
+                                            moves.append(jump)
+                                        moves.append((posx,posy))
+                                        print("jump at " + str(posx) + ", " + str(posy) + " over node" + str(jumpx) + ", " + str(jumpy))
 
         return moves
 
-    def findAllMoves(self, player):
+    def findAllMoves(self, player, moves_as_coords=False):
         moves = []
         for pawn in player["pawns"]:
-            moves.append(findMoves(pawn))
-        return moves
+            for move in self.findMoves(pawn):
+                moves.append(move)
+        return set(moves)
 
     def move(self, player, from_node, to_node):
         if(player != None and player["player"] == self.turn):
             if to_node in self.findMoves(from_node):
+
                 player["pawns"].remove(from_node)
                 player["pawns"].add(to_node)
+
                 self.board[from_node[0]][from_node[1]] = -1
                 self.board[to_node[0]][to_node[1]] = self.turn
+                self.pawnMovedEvent(None)
+
+                if(self.checkWinState(player)):
+                    print("Player "+ player["name"] + " wins!")
+                    self.setStatusMessage("Player "+ player["name"] + " wins!")
+                    self.gui.winStatusEvent()
+                    return True
 
                 if(self.turn == 0):
                     self.turn = 1
@@ -128,11 +132,6 @@ class HalmaCore():
                     self.turn = 0
 
                 self.setStatusMessage("Move completed. Now player "+ self.teams[self.turn]["name"]+ "'s turn.")
-                victor = self.checkWinState(self.board)
-                if(victor):
-                    self.setStatusMessage("Player "+ rt[victor]+ " wins!")
-                    self.gui.winStatusEvent()
-                self.pawnMovedEvent(None)
                 return True
         return False
 
