@@ -1,6 +1,8 @@
 import math
 from collections import namedtuple
 
+inf = float('inf')
+
 def __init__(self,core):
     self.halma_core = core
 
@@ -36,7 +38,7 @@ def getBoardValue(self, player):
         value = value + pawn_position_val
     return value
 
-#return a namedtuple implementation of a minimax tree with the given params
+# return a namedtuple implementation of a minimax tree with the given params
 def getMMTree(self, depth, cur_player, op_player, node_max, move, prune, alpha):
     mm_tree = namedtuple('Tree', ['state', 'score', 'children', 'move'])
     children = []
@@ -61,10 +63,22 @@ def getMMTree(self, depth, cur_player, op_player, node_max, move, prune, alpha):
                                        (from_pos, to_pos), prune, score)
                 children.append(child)
                 score = minimax(score, child.score)
-                if prune and self.compare(score, alpha) == compVal:
+                if prune and ((score>alpha)-(alpha>score) == compVal):
                     return mm_tree(teams, score, children, move)
     else:
         score = getBoardValue(cur_player) if node_max else getBoardValue(op_player)
 
-        return mm_tree(teams, score, children, move)
+    return mm_tree(teams, score, children, move)
 
+# return a best move (as a tuple coord pair) given parameters, using the minimaxTree
+def getBestMove(self, cur_player, op_player, depth, max_node, ab_prune):
+    alpha = inf
+    if max_node:
+        alpha = 0
+
+    mm_tree = self.getMMTree(depth, cur_player, op_player, max_node, (), ab_prune, alpha)
+
+    for child in mm_tree.children:
+        if child.score == mm_tree.score:
+            return child.move
+    return ((0, 0), (0, 0))
