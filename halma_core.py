@@ -71,6 +71,36 @@ class HalmaCore():
                     if ((posx, posy) not in self.red["pawns"]):
                         if((posx, posy) not in self.green["pawns"]):
                             moves.append((posx,posy))
+
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                posx = pawn[0] + 2*i
+                posy = pawn[1] + 2*j
+                if not ( posx < 0 or posx >= self.xy_dim or posy < 0 or posy >= self.xy_dim ):
+                    if ((posx, posy) not in self.red["pawns"]):
+                        if((posx, posy) not in self.green["pawns"]):
+                            if((i,j) in self.red["pawns"] or (i,j) in self.green["pawns"]):
+                                path = [(pawn[0], pawn[1])]
+                                moves.append(self.findJumps((posx, posy), path))
+                                moves.append((posx,posy))
+
+        return moves
+
+    def findJumps(self, pawn, path):
+        moves = []
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                posx = pawn[0] + 2*i
+                posy = pawn[1] + 2*j
+                if not ( posx < 0 or posx >= self.xy_dim or posy < 0 or posy >= self.xy_dim ):
+                    if ((posx, posy) not in self.red["pawns"]):
+                        if((posx, posy) not in self.green["pawns"]):
+                            if((i,j) in self.red["pawns"] or (i,j) in self.green["pawns"]):
+                                if (posx, posy) not in path:
+                                    path.append((pawn[0], pawn[1]))
+                                    moves.append(self.findJumps((posx, posy), path))
+                                    moves.append((posx,posy))
+
         return moves
 
     def findAllMoves(self, player, moves_as_coords=False):
@@ -78,25 +108,6 @@ class HalmaCore():
         for pawn in player["pawns"]:
             moves.append(findMoves(pawn))
         return moves
-
-    def findPathsRecursive(self,cur_node, player, path=[],visited=[],moves_as_coords=False):
-        for neighbor in cur_node.getNeighbors():
-            for next in neighbor.getNeighbors():
-                if (self.checkMoveValid(cur_node, next, player,req_player_on_turn=False)):
-                    visited.append(neighbor);
-                    if moves_as_coords:
-                        x1 = cur_node.x_coord
-                        y1 = cur_node.y_coord
-                        x2 = next.x_coord
-                        y2 = next.y_coord
-                        path.append([(x1, y1), (x2, y2)])
-                    else:
-                        path.append((cur_node, neighbor))
-                    return path
-                elif next not in visited:
-                    visited.append(next)
-                    self.findPathsRecursive(next,player, path,visited,moves_as_coords)
-        return path
 
     def move(self, player, from_node, to_node):
         if(player == self.teams[self.turn]):
@@ -106,18 +117,19 @@ class HalmaCore():
                 self.board[from_node[0]][from_node[1]] = -1
                 self.board[to_node[0]][to_node[1]] = self.turn
 
-            if(self.turn == 0):
-                self.turn = 1
-            else :
-                self.turn = 0
+                if(self.turn == 0):
+                    self.turn = 1
+                else :
+                    self.turn = 0
 
-            self.setStatusMessage("Move completed. Now player "+ self.teams[self.turn]["name"]+ "'s turn.")
-            victor = self.checkWinState(self.board)
-            if(victor):
-                self.setStatusMessage("Player "+ rt[victor]+ " wins!")
-                self.gui.winStatusEvent()
-            self.pawnMovedEvent(None)
-            return True
+                self.setStatusMessage("Move completed. Now player "+ self.teams[self.turn]["name"]+ "'s turn.")
+                victor = self.checkWinState(self.board)
+                if(victor):
+                    self.setStatusMessage("Player "+ rt[victor]+ " wins!")
+                    self.gui.winStatusEvent()
+                self.pawnMovedEvent(None)
+                return True
+        return False
 
 
 def main():
