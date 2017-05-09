@@ -3,6 +3,9 @@ from math import ceil
 from random import randint
 import functools
 
+from final.introai.halma_ai import HalmaAI
+
+
 class HalmaCore():
     global gui
     global board,turn,turn_count
@@ -34,6 +37,9 @@ class HalmaCore():
         print("First move: player ", self.teams[self.turn]["name"])
         self.setStatusMessage("Player "+self.teams[self.turn]["name"] +" gets the first move.")
 
+        self.ai = HalmaAI(self)
+        #out = self.ai.getBestMove(self.green,self.red,5,True,True)
+        #print( out)
 
     def setStatusMessage(self,string):
         self.status_message = string
@@ -143,7 +149,8 @@ class HalmaCore():
             return False
 
 def main():
-    board = HalmaCore()
+    HalmaCore()
+
     #board.printBoard()
     #board.moveXY(3,0,5,0,1)
     #board.printBoard()
