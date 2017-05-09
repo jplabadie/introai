@@ -80,7 +80,11 @@ class HalmaCore():
                         if((posx, posy) not in self.green["pawns"]):
                             if((i,j) in self.red["pawns"] or (i,j) in self.green["pawns"]):
                                 path = [(pawn[0], pawn[1])]
-                                moves.append(self.findJumps((posx, posy), path))
+                                jumps = self.findJumps((posx, posy), path)
+                                for jump in jumps:
+                                    moves.append(jump)
+                                print()
+                                print(moves)
                                 moves.append((posx,posy))
 
         return moves
@@ -97,7 +101,9 @@ class HalmaCore():
                             if((i,j) in self.red["pawns"] or (i,j) in self.green["pawns"]):
                                 if (posx, posy) not in path:
                                     path.append((pawn[0], pawn[1]))
-                                    moves.append(self.findJumps((posx, posy), path))
+                                    jumps = self.findJumps((posx, posy), path)
+                                    for jump in jumps:
+                                        moves.append(jump)
                                     moves.append((posx,posy))
 
         return moves
