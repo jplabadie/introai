@@ -67,7 +67,13 @@ class HalmaGui(QWidget):
             to_x = x_pos
             to_y = y_pos
             self.move_queue = [None]
-            halma.move(halma.teams[halma.turn], (from_x,from_y),(to_x,to_y))
+
+            player = None
+            if((from_x, from_y) in halma.green["pawns"]):
+                player = halma.green
+            elif((from_x, from_y) in halma.red["pawns"]):
+                player = halma.red
+            halma.move(player, (from_x,from_y),(to_x,to_y))
             last_button.setStyleSheet("background-color: #ededed; border: 1px grey white; border-style: ridge")
     def statusChangedEvent(self):
         mw.statusChangedEvent()

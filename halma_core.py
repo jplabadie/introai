@@ -31,7 +31,6 @@ class HalmaCore():
 
         self.status_message = ""
         self.gui = None
-        self.turn_count=0
         self.turn = 1
 
         print("First move: player ", self.teams[self.turn]["name"])
@@ -110,7 +109,7 @@ class HalmaCore():
         return moves
 
     def move(self, player, from_node, to_node):
-        if(player == self.teams[self.turn]):
+        if(player != None and player["player"] == self.turn):
             if to_node in self.findMoves(from_node):
                 player["pawns"].remove(from_node)
                 player["pawns"].add(to_node)
