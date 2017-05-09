@@ -108,7 +108,7 @@ class HalmaCore():
 
         return moves
 
-    def findAllMoves(self, player, moves_as_coords=False):
+    def findAllMoves(self, player):
         moves = []
         for pawn in player["pawns"]:
             moves.append(findMoves(pawn))
@@ -136,6 +136,12 @@ class HalmaCore():
                 return True
         return False
 
+    def validateMove(self, from_node, to_node, player):
+        if( player != None and player["player"] == self.turn):
+            if to_node in self.findMoves(from_node):
+                return True
+        else:
+            return False
 
 def main():
     board = HalmaCore()
