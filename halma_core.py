@@ -18,8 +18,8 @@ class HalmaCore():
 
         self.redstart = set([(0,0), (0,1), (0,2), (0,3), (1,0), (1,1), (1,2), (2,0), (2,1), (3,0)])
         self.greenstart = set([(7,4), (7,5), (7,6), (7,7), (6,5), (6,6), (6,7), (5,6), (5,7), (4,7)])
-        self.green = {"goal" : self.redstart, "pawns" : self.greenstart, "player" : 1, "name" : "Green"}
-        self.red = {"goal" : self.greenstart, "pawns" : self.redstart, "player" : 0, "name" : "Red"}
+        self.green = {"goal" : self.greenstart.copy(), "pawns" : self.greenstart, "player" : 1, "name" : "Green"}
+        self.red = {"goal" : self.greenstart.copy(), "pawns" : self.redstart, "player" : 0, "name" : "Red"}
 
         self.teams = [self.red, self.green]
 
@@ -52,13 +52,8 @@ class HalmaCore():
         if self.gui is not None:
             self.gui.pawnMovedEvent()
 
-    def checkWinState(self, board, check_player=None):
-        if( self.green["goal"] == self.green["pawns"]):
-            return 1
-        elif(self.red["goal"] == self.red["pawns"]):
-            return 0
-        else:
-            return False
+    def checkWinState(self,player):
+        return set(player["goal"]) == set(player["pawns"])
 
     def findMoves(self, pawn):
         moves = []
@@ -114,10 +109,19 @@ class HalmaCore():
     def move(self, player, from_node, to_node):
         if(player != None and player["player"] == self.turn):
             if to_node in self.findMoves(from_node):
+
                 player["pawns"].remove(from_node)
                 player["pawns"].add(to_node)
+
                 self.board[from_node[0]][from_node[1]] = -1
                 self.board[to_node[0]][to_node[1]] = self.turn
+                self.pawnMovedEvent(None)
+
+                if(self.checkWinState(player)):
+                    print("Player "+ player["name"] + " wins!")
+                    self.setStatusMessage("Player "+ player["name"] + " wins!")
+                    self.gui.winStatusEvent()
+                    return True
 
                 if(self.turn == 0):
                     self.turn = 1
@@ -125,22 +129,7 @@ class HalmaCore():
                     self.turn = 0
 
                 self.setStatusMessage("Move completed. Now player "+ self.teams[self.turn]["name"]+ "'s turn.")
-                victor = self.checkWinState(self.board)
-                if(victor):
-                    self.setStatusMessage("Player "+ rt[victor]+ " wins!")
-                    self.gui.winStatusEvent()
-                self.pawnMovedEvent(None)
-                for line in self.board:
-                    print(line)
-                    print()
-                print("red" +str(self.red["pawns"]))
-                print("green" + str(self.green["pawns"]))
-                print()
                 return True
-            print("not a vlaid move")
-            print(self.findAllMoves(player))
-        else:
-            print("not your turn")
         return False
 
 
