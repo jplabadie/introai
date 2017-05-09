@@ -37,34 +37,34 @@ def getBoardValue(self, player):
     return value
 
 #return a namedtuple implementation of a minimax tree with the given params
-def getMMTree(self, depth, friendly, opfor, node_max, team_info, opp_info, move, prune, alpha, evalFunc):
+def getMMTree(self, depth, cur_player, op_player, node_max, move, prune, alpha):
     mm_tree = namedtuple('Tree', ['state', 'score', 'children', 'move'])
     children = []
     
     if node_max:
-        teams = (friendly, opfor)
+        teams = (cur_player, op_player)
         minimax = max
         compVal = -1
         score = 0
     else:
-        teams = (opfor, friendly)
+        teams = (op_player, cur_player)
         minimax = min
         compVal = 1
         score = float('inf')
 
     if not depth == 0:
-        for src in friendly:
-            for dest in self.board.get_valid_moves(src, team_info):
-                teamC = friendly.copy()
-                self.halma_core.sub_move(dest, src, team_info, teamC)
-                child = self.getMMTree(depth - 1, opfor, teamC, not node_max, opp_info,
-                                      team_info, (src, dest), prune, score, evalFunc)
+        for from_pos in cur_player["pawns"]:
+            for to_pos in self.board.findAllMoves(from_pos, cur_player):
+                cur_player_cpy = cur_player.copy()
+                self.halma_core.move(cur_player_cpy, from_pos, to_pos)
+                child = self.getMMTree(depth - 1, op_player, cur_player_cpy, not node_max,
+                                       (from_pos, to_pos), prune, score)
                 children.append(child)
                 score = minimax(score, child.score)
                 if prune and self.compare(score, alpha) == compVal:
                     return mm_tree(teams, score, children, move)
     else:
-        score = evalFunc(team_info, friendly, opfor) if node_max else evalFunc(opp_info, opfor, friendly)
+        score = getBoardValue(cur_player) if node_max else getBoardValue(op_player)
 
         return mm_tree(teams, score, children, move)
 
