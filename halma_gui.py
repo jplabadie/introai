@@ -75,6 +75,7 @@ class HalmaGui(QWidget):
                 player = halma.red
             halma.move(player, (from_x,from_y),(to_x,to_y))
             last_button.setStyleSheet("background-color: #ededed; border: 1px grey white; border-style: ridge")
+
     def statusChangedEvent(self):
         mw.statusChangedEvent()
 
@@ -129,7 +130,6 @@ class HalmaGui(QWidget):
                 button.setIcon(icon)
 
 if __name__ == '__main__':
-
     app = QApplication(sys.argv)
     halma = HalmaCore()
     gui = HalmaGui()
