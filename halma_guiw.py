@@ -54,27 +54,18 @@ class HalmaGui(QWidget):
         x_pos = button.xpos
         y_pos = button.ypos
 
-        if self.move_queue[0] is None:
-            if x_pos % 2 != 0:
+        if(halma.board[x_pos][y_pos] == halma.turn):
+            if self.move_queue[0] is None:
                 button.setStyleSheet("background-color: #aaeded; border: 1px grey white; border-style: ridge")
+                self.move_queue[0] = button
             else:
-                button.setStyleSheet("background-color: #aaeded; border: 1px grey white; border-style: ridge")
-            self.move_queue[0] = button
-        else:
-            last_button = self.move_queue[0]
-            from_x = last_button.xpos
-            from_y = last_button.ypos
-            to_x = x_pos
-            to_y = y_pos
-            self.move_queue = [None]
+                last_button = self.move_queue[0]
+                from_node = (last_button.xpos, last_button.ypos)
+                to_node = (x_pos, y_pos)
+                if to_node in halma.findMoves(from_node):
+                    halma.move(halma.teams[halma.turn], from_node, to_node)
+                last_button.setStyleSheet("background-color: #ededed; border: 1px grey white; border-style: ridge")
 
-            player = None
-            if((from_x, from_y) in halma.green["pawns"]):
-                player = halma.green
-            elif((from_x, from_y) in halma.red["pawns"]):
-                player = halma.red
-            halma.move(player, (from_x,from_y),(to_x,to_y))
-            last_button.setStyleSheet("background-color: #ededed; border: 1px grey white; border-style: ridge")
     def statusChangedEvent(self):
         mw.statusChangedEvent()
 
@@ -117,8 +108,8 @@ class HalmaGui(QWidget):
         #self.finished = True
 
     def pawnMovedEvent(self):
-        for y in range(0, halma.xy_dim):
-            for x in range(0, halma.xy_dim):
+        for y in range(0, halma.dimensions):
+            for x in range(0, halma.dimensions):
                 button = self.tiles[y][x]
                 if halma.board[x][y] == 0:
                     icon = QIcon('red.png')
