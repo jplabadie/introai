@@ -10,14 +10,24 @@ from PyQt5.QtWidgets import QVBoxLayout
 from halma_core import HalmaCore
 
 class HalmaTile(QPushButton):
-    global xpos,ypos
-    xpos=0
-    ypos=0
+
+    def __init__(self, *__args):
+        super().__init__(*__args)
+
+        self.xpos=0
+        self.ypos=0
 
     def setCoords(self,x,y):
-        global xpos,ypos
-        xpos = x
-        ypos =y
+        self.xpos = x
+        self.ypos = y
+
+    def enterEvent(self, *args, **kwargs):
+        super().setIconSize(QSize(20,20))
+        self.setText('\r(' + str(self.xpos) + ',' + str(self.ypos) + ')')
+
+    def leaveEvent(self, *args, **kwargs):
+        super().setIconSize(QSize(45, 45))
+        self.setText('')
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -92,15 +102,15 @@ class HalmaGui(QWidget):
         for y in range(0, halma.xy_dim):
             for x in range(0, halma.xy_dim):
                 button = HalmaTile()
-                button.xpos = x
-                button.ypos = y
-                button.setIconSize(QSize(28,28))
-                button.setFixedSize(35,35)
+                button.setCoords(x,y)
+                button.setIconSize(QSize(45,45))
+
+                button.setFixedSize(55,55)
                 button.clicked.connect(self.pawnClicked)
                 if halma.board[x][y] == 0:
-                    icon = QIcon('red.png')
+                    icon = QIcon('red_pawn.png')
                 elif halma.board[x][y] == 1:
-                    icon = QIcon('green.png')
+                    icon = QIcon('green_pawn.png')
                 else:
                     icon = QIcon()
 
@@ -122,9 +132,9 @@ class HalmaGui(QWidget):
             for x in range(0, halma.xy_dim):
                 button = self.tiles[y][x]
                 if halma.board[x][y] == 0:
-                    icon = QIcon('red.png')
+                    icon = QIcon('red_pawn.png')
                 elif halma.board[x][y] == 1:
-                    icon = QIcon('green.png')
+                    icon = QIcon('green_pawn.png')
                 else:
                     icon = QIcon()
                 button.setIcon(icon)
