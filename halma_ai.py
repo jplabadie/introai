@@ -93,7 +93,7 @@ class HalmaAI( object ):
                     #print( "!"+str(ab)+":"+str(compVal) + ":"+str(minimax))
                     #print(prune)
                     if prune and ab == compVal:
-                        print("\n\n#$%@%$%#%#%Q@#%@$#% PRUNED #%$%^%$^#\n\n")
+                        #print("\n\n#$%@%$%#%#%Q@#%@$#% PRUNED #%$%^%$^#\n\n")
                         return mm_tree(teams, score, children, move)
         else:
             score = self.getBoardValue(cur_player) if node_max else self.getBoardValue(op_player)

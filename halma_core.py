@@ -34,18 +34,24 @@ class HalmaCore():
         self.gui = None
         self.ai = HalmaAI(self)
         self.turn = 1
-
+        self.plys = 2
+        self.ai_player =0
         print("First move: player ", self.teams[self.turn]["name"])
         self.setStatusMessage("Player "+self.teams[self.turn]["name"] +" gets the first move.")
 
-    def getSuggestedMove(self):
+    def setAIPly(self, depth):
+        if depth >0:
+            self.plys = depth
 
+    def setAiPlayer(self,number):
+        self.ai_player = number
+    def getSuggestedMove(self):
         if self.turn == 0:
             op = 1
-        else: op =0
+        else: op = 0
         cur_player = self.teams[self.turn]
         op_player = self.teams[op]
-        out = self.ai.getBestMove(cur_player, op_player, 2,True, True)
+        out = self.ai.getBestMove(cur_player, op_player, self.plys ,True, True)
         print("Suggested Move for Player "+ str(self.teams[self.turn]["player"])+ " is "+ str(out))
         self.move(cur_player,out[0],out[1])
         # for x in self.board:
@@ -53,7 +59,7 @@ class HalmaCore():
 
     def setStatusMessage(self,string):
         self.status_message = string
-        if(self.turn%2 is not 0):
+        if(self.turn%2 is self.ai_player):
             self.getSuggestedMove()
         self.statusChangedEvent()
 

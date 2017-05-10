@@ -160,8 +160,14 @@ class HalmaGui(QWidget):
                 button.setIcon(icon)
 
 if __name__ == '__main__':
+    aiplayer = sys.argv[0]
+
+    if aiplayer is None:
+        aiplayer = 0
+
     app = QApplication(sys.argv)
     halma = HalmaCore()
+    halma.setAiPlayer(aiplayer)
     gui = HalmaGui()
 
     halma.gui = gui
