@@ -50,8 +50,8 @@ class HalmaAI( object ):
     def getBoardValue(self, player):
         value = 0
         for pawn in player["pawns"]:
-            #pawn_position_val = self.getCenterlineDist( pawn )
-            pawn_position_val = (8-self.getGoalDist( pawn, player["goal"]))
+            pawn_position_val = (5-self.getCenterlineDist( pawn ))
+            pawn_position_val = pawn_position_val+(8-self.getGoalDist( pawn, player["goal"]))
             value = value + pawn_position_val
         return value
 

@@ -54,9 +54,9 @@ class HalmaCore():
 
     def setStatusMessage(self,string):
         self.status_message = string
+        if(self.turn%2 is not 0):
+            self.getSuggestedMove()
         self.statusChangedEvent()
-        #if(self.turn%2 is not 0):
-        self.getSuggestedMove()
 
     def getStatusMessage(self):
         return self.status_message
@@ -64,6 +64,7 @@ class HalmaCore():
     def statusChangedEvent(self):
         if self.gui is not None:
             self.gui.statusChangedEvent()
+            self.gui.show()
 
     def pawnMovedEvent(self,pawn):
         if self.gui is not None:
