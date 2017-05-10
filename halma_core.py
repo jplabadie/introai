@@ -5,8 +5,7 @@ import functools
 
 import sys
 
-from final.introai.halma_ai import HalmaAI
-
+from halma_ai import HalmaAI
 
 class HalmaCore():
     global gui, ai
