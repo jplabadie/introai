@@ -11,8 +11,13 @@ class HalmaAI( object ):
 
     # return distance to goal from current (manhattan) given tuple coords
     def getGoalDist(self, cur_pos, player_goal):
+
+        if (7,7) in player_goal:
+            goal = [(8,8,)]
+        else:
+            goal = [(-1,-1)]
         distance = float('inf')
-        for target in player_goal:
+        for target in goal:
             goal_dist = ((target[0]-cur_pos[0])**2)
             goal_dist = goal_dist + (target[1]-cur_pos[1])**2
             goal_dist = goal_dist**(1/2)
@@ -29,7 +34,7 @@ class HalmaAI( object ):
         value = 0
         for pawn in player["pawns"]:
             if pawn in player["goal"]:
-                value += 20
+                value = value + 99999999
         return value
 
     # return the distance to the centerline (nearest centerline coord)
@@ -57,10 +62,12 @@ class HalmaAI( object ):
     def getBoardValue(self, player):
         value = 0
         for pawn in player["pawns"]:
-            pawn_position_val = (5-self.getCenterlineDist( pawn ))
-            pawn_position_val = pawn_position_val+(8-self.getGoalDist( pawn, player["goal"]))
+            pawn_position_val = 5*(8-self.getCenterlineDist( pawn ))
+            pawn_position_val = pawn_position_val+(12-self.getGoalDist( pawn, player["goal"]))
             goalFill = self.getGoalFill(player)
             value = value + pawn_position_val + goalFill
+        if value <1:
+            print("HUGU"+str(value))
         return value
 
     # return a namedtuple implementation of a minimax tree with the given params
@@ -95,13 +102,12 @@ class HalmaAI( object ):
                                            (from_pos, to_pos), prune, score)
 
                     children.append(child)
-
                     score = minimax(score, child.score)
+                    print("score:"+str(score)+" goal: "+ str(cur_player_cpy["goal"]))
                     ab = (score > alpha) - (alpha > score)
                     #print( "!"+str(ab)+":"+str(compVal) + ":"+str(minimax))
                     #print(prune)
                     if prune and ab == compVal:
-                        #print("\n\n#$%@%$%#%#%Q@#%@$#% PRUNED #%$%^%$^#\n\n")
                         return mm_tree(teams, score, children, move)
         else:
             score = self.getBoardValue(cur_player) if node_max else self.getBoardValue(op_player)
@@ -127,7 +133,9 @@ class HalmaAI( object ):
                     return self.fbmove(cur_player)
 
                # print("highest: "+str(child.score))
-                #print(child)
+                #print(child)c_val = self.getCenterlineDist(move)
+
+                #print("move: "+ str(child.move)+ " score: "+ str(child.score))
                 return child.move
         return False
 

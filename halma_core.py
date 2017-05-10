@@ -19,8 +19,8 @@ class HalmaCore():
 
         self.greenstart = set([(0,0), (0,1), (0,2), (0,3), (1,0), (1,1), (1,2), (2,0), (2,1), (3,0)])
         self.redstart = set([(7,4), (7,5), (7,6), (7,7), (6,5), (6,6), (6,7), (5,6), (5,7), (4,7)])
-        self.green = {"goal" : self.redstart, "pawns" : self.greenstart, "player" : 1, "name" : "Green"}
-        self.red = {"goal" : self.greenstart, "pawns" : self.redstart, "player" : 0, "name" : "Red"}
+        self.green = {"goal" : self.redstart.copy(), "pawns" : self.greenstart, "player" : 1, "name" : "Red"}
+        self.red = {"goal" : self.greenstart.copy(), "pawns" : self.redstart, "player" : 0, "name" : "Green"}
 
         self.teams = [self.red, self.green]
 
@@ -33,7 +33,7 @@ class HalmaCore():
         self.status_message = ""
         self.gui = None
         self.ai = HalmaAI(self)
-        self.turn = 1
+        self.turn = 0
         self.plys = 2
         self.ai_player =0
         print("First move: player ", self.teams[self.turn]["name"])
@@ -45,6 +45,7 @@ class HalmaCore():
 
     def setAiPlayer(self,number):
         self.ai_player = number
+
     def getSuggestedMove(self):
         if self.turn == 0:
             op = 1
@@ -59,7 +60,7 @@ class HalmaCore():
 
     def setStatusMessage(self,string):
         self.status_message = string
-        if(self.turn%2 is self.ai_player):
+        if(self.turn == 0):
             self.getSuggestedMove()
         self.statusChangedEvent()
 
@@ -170,9 +171,10 @@ class HalmaCore():
                 try:
                     player["pawns"].remove(from_node)
                     player["pawns"].add(to_node)
+                    #print("Moves" + str(moves))
                 except Exception:
                     print ("Fail: from "+str(from_node) + " to "+str(to_node) + " : "+ str(player["pawns"]))
-                    #print("Moves"+str(moves))
+                    print("Moves"+str(moves))
                     return False
                 return True
         else:

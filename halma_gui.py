@@ -26,7 +26,7 @@ class HalmaTile(QPushButton):
         self.setText('\r(' + str(self.xpos) + ',' + str(self.ypos) + ')')
 
     def leaveEvent(self, *args, **kwargs):
-        super().setIconSize(QSize(45, 45))
+        super().setIconSize(QSize(60, 60))
         self.setText('')
 
 class MainWindow(QMainWindow):
@@ -112,14 +112,14 @@ class HalmaGui(QWidget):
             for x in range(0, halma.xy_dim):
                 button = HalmaTile()
                 button.setCoords(x,y)
-                button.setIconSize(QSize(45,45))
+                button.setIconSize(QSize(60,60))
 
-                button.setFixedSize(55,55)
+                button.setFixedSize(65,65)
                 button.clicked.connect(self.pawnClicked)
                 if halma.board[x][y] == 0:
-                    icon = QIcon('red_pawn.png')
-                elif halma.board[x][y] == 1:
                     icon = QIcon('green_pawn.png')
+                elif halma.board[x][y] == 1:
+                    icon = QIcon('red_pawn.png')
                 else:
                     icon = QIcon()
 
@@ -152,9 +152,9 @@ class HalmaGui(QWidget):
             for x in range(0, halma.xy_dim):
                 button = self.tiles[y][x]
                 if halma.board[x][y] == 0:
-                    icon = QIcon('red_pawn.png')
-                elif halma.board[x][y] == 1:
                     icon = QIcon('green_pawn.png')
+                elif halma.board[x][y] == 1:
+                    icon = QIcon('red_pawn.png')
                 else:
                     icon = QIcon()
                 button.setIcon(icon)
