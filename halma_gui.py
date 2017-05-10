@@ -84,7 +84,16 @@ class HalmaGui(QWidget):
             elif((from_x, from_y) in halma.red["pawns"]):
                 player = halma.red
             halma.move(player, (from_x,from_y),(to_x,to_y))
-            last_button.setStyleSheet("background-color: #ededed; border: 1px grey white; border-style: ridge")
+            if from_y % 2 != 0:
+                if from_x % 2 == 0:
+                    last_button.setStyleSheet("background-color: white; border: 1px grey white; border-style: ridge")
+                else:
+                    last_button.setStyleSheet("background-color: #ededed; border: 1px grey white; border-style: ridge")
+            else:
+                if from_x % 2 == 0:
+                    last_button.setStyleSheet("background-color: #ededed; border: 1px grey white; border-style: ridge")
+                else:
+                    last_button.setStyleSheet("background-color: white; border: 1px grey white; border-style: ridge")
 
     def statusChangedEvent(self):
         mw.statusChangedEvent()
@@ -97,7 +106,7 @@ class HalmaGui(QWidget):
         self.grid = QGridLayout()
         self.move_queue = [None]
         self.tiles = [[0 for x in range(halma.xy_dim)] for y in range(halma.xy_dim)]
-
+        color_toggle = False
 
         for y in range(0, halma.xy_dim):
             for x in range(0, halma.xy_dim):
@@ -114,10 +123,20 @@ class HalmaGui(QWidget):
                 else:
                     icon = QIcon()
 
-                button.setStyleSheet("background-color: #ededed; border:1px grey white; border-style: ridge ")
+                if color_toggle:
+                    button.setStyleSheet("background-color: white; border: 1px grey white; border-style: ridge ")
+                    color_toggle = False
+                else:
+                    button.setStyleSheet("background-color: #ededed; border:1px grey white; border-style: ridge ")
+                    color_toggle = True
                 button.setIcon(icon)
                 self.tiles[y][x] = button
                 self.grid.addWidget(button, y+1, x+1)
+
+            if color_toggle:
+                color_toggle = False
+            else:
+                color_toggle = True
         self.grid.setSpacing(1)
         self.setLayout(self.grid)
         self.setGeometry(100, 100, 10, 10)
@@ -128,6 +147,7 @@ class HalmaGui(QWidget):
         #self.finished = True
 
     def pawnMovedEvent(self):
+        gui.show()
         for y in range(0, halma.xy_dim):
             for x in range(0, halma.xy_dim):
                 button = self.tiles[y][x]

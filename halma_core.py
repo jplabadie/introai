@@ -3,11 +3,13 @@ from math import ceil
 from random import randint
 import functools
 
+import sys
+
 from final.introai.halma_ai import HalmaAI
 
 
 class HalmaCore():
-    global gui
+    global gui, ai
     global board,turn,turn_count
     global dimensions,pieces,players
     global pawns
@@ -15,7 +17,6 @@ class HalmaCore():
     def __init__(self, xy_dim=8, pieces=10, players=2, start_shape='triangle'):
         super().__init__()
         self.xy_dim = xy_dim
-
 
         self.greenstart = set([(0,0), (0,1), (0,2), (0,3), (1,0), (1,1), (1,2), (2,0), (2,1), (3,0)])
         self.redstart = set([(7,4), (7,5), (7,6), (7,7), (6,5), (6,6), (6,7), (5,6), (5,7), (4,7)])
@@ -32,18 +33,30 @@ class HalmaCore():
 
         self.status_message = ""
         self.gui = None
+        self.ai = HalmaAI(self)
         self.turn = 1
 
         print("First move: player ", self.teams[self.turn]["name"])
         self.setStatusMessage("Player "+self.teams[self.turn]["name"] +" gets the first move.")
 
-        self.ai = HalmaAI(self)
-        #out = self.ai.getBestMove(self.green,self.red,5,True,True)
-        #print( out)
+    def getSuggestedMove(self):
+
+        if self.turn == 0:
+            op = 1
+        else: op =0
+        cur_player = self.teams[self.turn]
+        op_player = self.teams[op]
+        out = self.ai.getBestMove(cur_player, op_player, 2,True, True)
+        print("Suggested Move for Player "+ str(self.teams[self.turn]["player"])+ " is "+ str(out))
+        self.move(cur_player,out[0],out[1])
+        # for x in self.board:
+        #     print(str(x))
 
     def setStatusMessage(self,string):
         self.status_message = string
         self.statusChangedEvent()
+        #if(self.turn%2 is not 0):
+        self.getSuggestedMove()
 
     def getStatusMessage(self):
         return self.status_message
@@ -64,60 +77,60 @@ class HalmaCore():
         else:
             return False
 
-    def findMoves(self, pawn):
+    def findMoves(self, pawn, player):
         moves = []
         for i in range(-1, 2):
             for j in range(-1, 2):
-                if( i == 0 and j == 0):
+                if (i == 0 and j == 0):
                     continue
                 posx = pawn[0] + i
                 posy = pawn[1] + j
-                if not ( posx < 0 or posx >= self.xy_dim or posy < 0 or posy >= self.xy_dim ):
+                if not (posx < 0 or posx >= self.xy_dim or posy < 0 or posy >= self.xy_dim):
                     if ((posx, posy) not in self.red["pawns"]):
-                        if((posx, posy) not in self.green["pawns"]):
-                            moves.append((posx,posy))
+                        if ((posx, posy) not in self.green["pawns"]):
+                            moves.append((posx, posy))
 
         for jump in self.findJumps(pawn, [pawn]):
             moves.append(jump)
 
-
         return moves
 
-    def findJumps(self, pawn, path):
+    def findJumps(self, pawn, path, player=None):
         moves = []
         for i in range(-1, 2):
             for j in range(-1, 2):
-                if( i == 0 and j == 0):
+                if (i == 0 and j == 0):
                     continue
-                posx = pawn[0] + 2*i
-                posy = pawn[1] + 2*j
-                if not ( posx < 0 or posx >= self.xy_dim or posy < 0 or posy >= self.xy_dim ):
+                posx = pawn[0] + 2 * i
+                posy = pawn[1] + 2 * j
+                if not (posx < 0 or posx >= self.xy_dim or posy < 0 or posy >= self.xy_dim):
                     if ((posx, posy) not in self.red["pawns"]):
-                        if((posx, posy) not in self.green["pawns"]):
+                        if ((posx, posy) not in self.green["pawns"]):
                             jumpx = pawn[0] + i
                             jumpy = pawn[1] + j
-                            if not ( jumpx < 0 or jumpx >= self.xy_dim or jumpy < 0 or jumpy >= self.xy_dim ):
-                                if(self.board[jumpx][jumpy] != -1 and (jumpx,jumpy) != pawn):
+                            if not (jumpx < 0 or jumpx >= self.xy_dim or jumpy < 0 or jumpy >= self.xy_dim):
+                                if(((jumpx, jumpy) in self.green["pawns"]  or (jumpx, jumpy) in self.red["pawns"])and (jumpx, jumpy) != pawn):
                                     if (posx, posy) not in path:
                                         path.append((pawn[0], pawn[1]))
                                         jumps = self.findJumps((posx, posy), path)
                                         for jump in jumps:
                                             moves.append(jump)
-                                        moves.append((posx,posy))
-                                        print("jump at " + str(posx) + ", " + str(posy) + " over node" + str(jumpx) + ", " + str(jumpy))
+                                        moves.append((posx, posy))
+                                        #print("jump at " + str(posx) + ", " + str(posy) + " over node" + str(
+                                         #   jumpx) + ", " + str(jumpy))
 
         return moves
 
     def findAllMoves(self, player, moves_as_coords=False):
         moves = []
         for pawn in player["pawns"]:
-            for move in self.findMoves(pawn):
+            for move in self.findMoves(pawn,player):
                 moves.append(move)
         return set(moves)
 
     def move(self, player, from_node, to_node):
         if(player != None and player["player"] == self.turn):
-            if to_node in self.findMoves(from_node):
+            if to_node in self.findMoves(from_node, player):
 
                 player["pawns"].remove(from_node)
                 player["pawns"].add(to_node)
@@ -141,9 +154,20 @@ class HalmaCore():
                 return True
         return False
 
-    def validateMove(self, from_node, to_node, player):
+    def validateMove(self, player, from_node, to_node):
+        pass
+
+    def exploreMove(self, player, from_node, to_node):
         if( player != None and player["player"] == self.turn):
-            if to_node in self.findMoves(from_node):
+            moves = self.findMoves(from_node, player)
+            if to_node in moves:
+                try:
+                    player["pawns"].remove(from_node)
+                    player["pawns"].add(to_node)
+                except Exception:
+                    print ("Fail: from "+str(from_node) + " to "+str(to_node) + " : "+ str(player["pawns"]))
+                    #print("Moves"+str(moves))
+                    return False
                 return True
         else:
             return False
