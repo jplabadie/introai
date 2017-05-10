@@ -25,6 +25,13 @@ class HalmaAI( object ):
             sum = sum + (((to_node[0] -node[0]) ** 2) + ((to_node[1] - node[1])) ** 2)
         return sum
 
+    def getGoalFill(self, player):
+        value = 0
+        for pawn in player["pawns"]:
+            if pawn in player["goal"]:
+                value += 20
+        return value
+
     # return the distance to the centerline (nearest centerline coord)
     # see 'Another Formula' https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line)
     def getCenterlineDist(self, cur_pos):
@@ -52,7 +59,8 @@ class HalmaAI( object ):
         for pawn in player["pawns"]:
             pawn_position_val = (5-self.getCenterlineDist( pawn ))
             pawn_position_val = pawn_position_val+(8-self.getGoalDist( pawn, player["goal"]))
-            value = value + pawn_position_val
+            goalFill = self.getGoalFill(player)
+            value = value + pawn_position_val + goalFill
         return value
 
     # return a namedtuple implementation of a minimax tree with the given params
@@ -145,4 +153,3 @@ class HalmaAI( object ):
                 best_move = move
         print("BestbyFB: "+ str(best_move))
         return best_move
-
